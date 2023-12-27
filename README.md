@@ -1,0 +1,2 @@
+# quasistatic
+Magnetostatic EM Solver
