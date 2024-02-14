@@ -2,8 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.constants import mu_0, pi
 
-debug = False
-
 class Grid:
     """Rectilinear grid class
     Grid axes are along X, Y, and Z, and units are in meters
@@ -133,7 +131,7 @@ class Coil:
         plt.show()
         return ax
     
-    def compute_grid(self, grid: Grid) -> Result:
+    def compute(self, grid: Grid) -> Result:
         obs_points = grid.points
         result_array = np.empty_like(obs_points)
         for i in range(obs_points.shape[0]):
@@ -151,12 +149,11 @@ class Coil:
             cos_theta_0 = np.einsum('ij,ij->i', P-l0s, l1s-l0s)/(np.linalg.norm(P-l0s, axis=1)*np.linalg.norm(l1s-l0s, axis=1))
             cos_theta_1 = np.einsum('ij,ij->i', P-l1s, l0s-l1s)/(np.linalg.norm(P-l1s, axis=1)*np.linalg.norm(l0s-l1s, axis=1))
 
-            if debug:
-                print(f'R:     {Rs[0,:]}')
-                print(f'R mag: {R_mags[0]}')
-                print(f'R hat: {R_hats[0,:]}')
-                print(f'cos(theta_zero): {cos_theta_0[0]}')
-                print(f'cos(theta_one):  {cos_theta_1[0]}')
+            # print(f'R:     {Rs[0,:]}')
+            # print(f'R mag: {R_mags[0]}')
+            # print(f'R hat: {R_hats[0,:]}')
+            # print(f'cos(theta_zero): {cos_theta_0[0]}')
+            # print(f'cos(theta_one):  {cos_theta_1[0]}')
 
             phis = np.cross(self.l_hats, R_hats)
             summand = phis * (mu_0/(4*pi*R_mags)*(cos_theta_0+cos_theta_1))[:,None]
