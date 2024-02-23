@@ -28,7 +28,8 @@ def line(length: float, segments: int, fname=None):
     points = np.zeros((segments+1,3))
     points[:,2] = np.linspace(-length/2, length/2, segments+1)
 
-    save_csv(points, fname)
+    return points
+    # save_csv(points, fname)
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Generate basic coils')

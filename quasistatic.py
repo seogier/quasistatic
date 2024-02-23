@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.constants import mu_0, pi
+import pyqtgraph as pg
 
 class Grid:
     """Rectilinear grid class
@@ -20,8 +21,8 @@ class Grid:
         """Get list of (x, y, z) points
         Result is actually 2D, but the second dimension is the XYZ components
         [nX*nY*nZ, 3]"""
-        X, Y, Z = np.meshgrid(self.Xs,self.Ys,self.Zs)
-        points = np.stack([X.ravel().T, Y.ravel().T, Z.ravel().T],1)
+        X, Y, Z = np.meshgrid(self.Xs,self.Ys,self.Zs, indexing='ij')
+        points = np.stack([X.flatten().T, Y.flatten().T, Z.flatten().T],1)
         return points
 
     @property
@@ -69,6 +70,11 @@ class Grid:
             Zs = np.arange(Z_range[0], Z_range[1]+dZ, dZ)
 
         return cls(Xs, Ys, Zs)
+    
+    def plot(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.scatter(*self.points.T)
  
 class Result(Grid):
     def __init__(self, grid, values) -> None:
@@ -84,7 +90,7 @@ class Result(Grid):
         nY = len(grid.Ys)
         nZ = len(grid.Zs)
         shape = (nX, nY, nZ, 3)
-        print('New Shape:', shape)
+        # print('New Shape:', shape)
         values = values.reshape(shape)
         return cls(grid, values)
         
@@ -97,6 +103,10 @@ class Result(Grid):
     def B1_phase(self):
         """Calculate phase of B1"""
         return np.arctan2(self.values[...,1], self.values[...,0])
+    
+    def view_B1_mag(self):
+        p = pg.plot(self.B1_mag.T,axes={'t':1,'x':0,'y':2})
+        p.view.invertY(False)
 
 class Coil:
     """MRI coil for quasistatic analysis.
@@ -118,16 +128,19 @@ class Coil:
         points = np.genfromtxt(points_csv, delimiter=',', skip_header=1)
         return cls(points)
 
-    def plot_coil(self):
-        fig = plt.figure()
-        ax = fig.add_subplot(1,1,1, projection='3d')
+    def plot_coil(self, ax = None):
+        if ax == None:
+            fig = plt.figure()
+            ax = fig.add_subplot(1,1,1, projection='3d')
         ax.plot(*self.points.T)
         ax.scatter(*self.points.T)
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
         ax.set_aspect('equal')
-        fig.tight_layout()
+        ax.view_init(elev=172, azim=-28, roll=90)
+        if ax == None:
+            fig.tight_layout()
         plt.show()
         return ax
     
@@ -158,7 +171,7 @@ class Coil:
             phis = np.cross(self.l_hats, R_hats)
             summand = phis * (mu_0/(4*pi*R_mags)*(cos_theta_0+cos_theta_1))[:,None]
             result_array[i,:] = np.sum(summand,0)
-        print(result_array.shape)
+        # print(result_array.shape)
         result = Result.from_1D(grid, result_array)
-        print(result.B1_mag.shape)
+        # print(result.B1_mag.shape)
         return result
